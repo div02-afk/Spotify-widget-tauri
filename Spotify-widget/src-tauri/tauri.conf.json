@@ -11,11 +11,14 @@
     "version": "0.1.0"
   },
   "tauri": {
+    
     "allowlist": {
       "http": {
         "all": true,
         "request": true
       },
+      
+      
       "window": {
         "all": false,
         "close": true,
@@ -86,6 +89,8 @@
         "titleBarStyle": "Transparent",
         "resizable": false,
         "width": 300
+        
+        
       }
     ]
   }
