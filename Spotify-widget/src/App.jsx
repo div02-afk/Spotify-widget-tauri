@@ -26,7 +26,7 @@ function App() {
   const handleMouseLeave = async (e) => {
     let width = 50;
     let height = 50;
-    const logicalPosition = new LogicalPosition(1470, 740);
+    const logicalPosition = new LogicalPosition(1460, 740);
     const logicalSize = new LogicalSize(width, height);
     try {
       await appWindow.setResizable(true);
