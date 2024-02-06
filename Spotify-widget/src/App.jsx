@@ -8,6 +8,7 @@ import "./App.css";
 import {
   loginWithSpotify,
   getCurrentlyPlayingTrack,
+  spotifyMediaControl,
 } from "./components/spotifyAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,8 +16,10 @@ import {
   faCirclePause,
   faCircleChevronLeft,
   faCircleChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
-import { motion } from "framer-motion";
+  faArrowRightToBracket,
+ faCircleXmark}
+ from "@fortawesome/free-solid-svg-icons";
+import { animate, motion } from "framer-motion";
 import react from "./assets/react.svg";
 import store from "./components/store";
 
@@ -24,27 +27,62 @@ document.addEventListener("contextmenu", (event) => event.preventDefault()); // 
 
 function App() {
   const [userInfo, setUserInfo] = useState({});
-
+  let accessToken = "";
+  const [image, setImage] = useState("");
+  const [name, setName] = useState("");
+  const [artist, setArtist] = useState("");
+  store.subscribe(() => {
+    setImage(store.getState().image);
+    setName(store.getState().songName);
+    setArtist(store.getState().artist);
+  });
   // const accessToken = store.getState().accessToken;
   const [isHovering, setIsHovering] = useState(true);
   const [options, setOptions] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [isLogged, setIsLogged] = useState(store.getState().loggedin);
   // const isLogged = store.getState().loggedin;
-  if (isLogged) {
-    
-    const interval = setInterval(getCurrentlyPlayingTrack, 10000);
-  }
+
   useEffect(() => {
     if (Object.keys(userInfo).length !== 0) {
       console.log("logging in");
+      setIsLogged(true);
       store.dispatch({ type: "loggedin", action: true });
     }
     store.dispatch({ type: "userInfo", payload: userInfo });
+    window.localStorage.setItem("code", userInfo.code);
+    window.localStorage.setItem("accessToken", userInfo.accessToken);
+    window.localStorage.setItem("refreshToken", userInfo.refreshToken);
+    accessToken = userInfo.accessToken;
+    if (isLogged) {
+      setTimeout(() => {
+        const interval = setInterval(getCurrentlyPlayingTrack, 5000);
+      }, 1000);
+    }
   }, [userInfo]);
+  useEffect(() => {
+    console.log(accessToken);
+    if (accessToken !== undefined && accessToken !== "") {
+      {
+        const tempUserInfo = {
+          accessToken: accessToken,
+          refreshToken: window.localStorage.getItem("refreshToken"),
+          code: window.localStorage.getItem("code"),
+        };
+        store.dispatch({ type: "loggedin", action: true });
+        store.dispatch({ type: "userInfo", payload: tempUserInfo });
+        setUserInfo(tempUserInfo);
+        setIsLogged(true);
+      }
+    }
+  }, []);
+  useEffect(() => {
+    setIsPlaying(store.getState().isPlaying);
+  }, [store.getState().isPlaying]);
+  useEffect(() => {}, [isLogged]);
   const handleMouseLeave = async (e) => {
-    let width = 50;
-    let height = 50;
+    let width = 70;
+    let height = 70;
     const logicalPosition = new LogicalPosition(1460, 740);
     const logicalSize = new LogicalSize(width, height);
     try {
@@ -70,24 +108,30 @@ function App() {
     } catch (e) {
       console.log(e);
     }
-
     setIsHovering(true);
   };
 
   async function mediaControl(control) {
     if (control === "play" || control === "pause") setIsPlaying(!isPlaying);
+    spotifyMediaControl(control);
   }
 
   return (
     <div className="overflow-hidden ">
       {!isHovering ? (
         <motion.div
-          className="w-full h-screen glass rounded-full flex justify-center"
+          className="w-[50px] h-[50px] glass rounded-full flex justify-center"
           onMouseEnter={handleMouseEnter}
-          animate={isPlaying ? { rotate: [null, 360] } : {}}
+          animate={{ rotate: isPlaying ? [null, 360] : 0 }}
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
         >
-          <img src={react} alt="React Logo" width={40} height={40} />
+          <img
+            src={image || react}
+            alt="React Logo"
+            width={60}
+            height={60}
+            className="rounded-[100%] object-contain p-0.5"
+          />
         </motion.div>
       ) : (
         <motion.div
@@ -103,19 +147,35 @@ function App() {
           }}
           transition={{ duration: 0.0 }}
         >
-          <div className="flex flex-row items-center justify-center text-3xl">
-            <div className="flex-col">
-            <div>{store.getState().songName || "Title"}</div>
-            <div className="text-sm">{isLogged && "by "+store.getState().artist}</div>
-            </div>
-            {!isLogged && (
-              <div
-                className="flex flex-col items-center justify-end text-xl border-2 ml-20"
+          <div className="flex flex-row items-center justify-center text-xl">
+            {isLogged && <div className="flex w-full relative">
+              <div className="text-center w-full z-10">{name || ""}</div>
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                whileHover={{ scale: 1.2 }}
+                onHoverStart={(e) => {}}
+                onHoverEnd={(e) => {}}
+                className="flex absolute right-4 items-center justify-end text-xl mb-2 mt-2 gap-6"
+                onClick={() => {
+                  appWindow.close();
+                }}
+              >
+                <FontAwesomeIcon icon={faCircleXmark} />
+                
+              </motion.div>
+            </div>}
+            {!isLogged && (<div className="flex gap-6">
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                whileHover={{ scale: 1.2 }}
+                onHoverStart={(e) => {}}
+                onHoverEnd={(e) => {}}
+                className="flex items-center justify-end text-xl mb-2 mt-2 gap-6"
                 onClick={() => {
                   loginWithSpotify();
                   let count = 0;
                   const interval = setInterval(async () => {
-                    const data = await fetch("http://localhost:3000/data", {
+                    const data = await fetch("https://spotify-widget-server.vercel.app/data", {
                       method: "GET",
                       headers: {
                         "Content-Type": "application/json",
@@ -131,18 +191,31 @@ function App() {
                       setIsLogged(true);
                     }
                     count++;
-                    if (count > 10) {
+                    if (count > 20) {
                       clearInterval(interval);
                     }
-                    console.log("the data from server", json);
-                  }, 3000);
+                  }, 1000);
                 }}
               >
-                Login
+                <FontAwesomeIcon icon={faArrowRightToBracket} />
+                
+              </motion.div>
+              <motion.div
+                whileTap={{ scale: 0.8 }}
+                whileHover={{ scale: 1.2 }}
+                onHoverStart={(e) => {}}
+                onHoverEnd={(e) => {}}
+                className="flex items-center justify-end text-xl mb-2 mt-2 gap-6"
+                onClick={() => {
+                  appWindow.close();
+                }}
+              >
+                <FontAwesomeIcon icon={faCircleXmark} />
+                
+              </motion.div>
               </div>
             )}
           </div>
-
           <div
             id="controls"
             className="flex flex-row items-center justify-center gap-6 text-4xl"
@@ -186,6 +259,9 @@ function App() {
                 onClick={() => mediaControl("next")}
               />
             </motion.div>
+          </div>
+          <div className="text-[10px] text-center mt-1">
+            {isLogged && "by " + artist}
           </div>
         </motion.div>
       )}
