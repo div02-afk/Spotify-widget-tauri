@@ -22,6 +22,7 @@ import {
 import { animate, motion } from "framer-motion";
 import react from "./assets/react.svg";
 import store from "./components/store";
+import { TauriEvent } from "@tauri-apps/api/event";
 
 document.addEventListener("contextmenu", (event) => event.preventDefault()); // Disable right-click menu
 
@@ -49,6 +50,7 @@ function App() {
       setIsLogged(true);
       store.dispatch({ type: "loggedin", action: true });
     }
+    // console.log(userInfo);
     store.dispatch({ type: "userInfo", payload: userInfo });
     window.localStorage.setItem("code", userInfo.code);
     window.localStorage.setItem("accessToken", userInfo.accessToken);
@@ -60,22 +62,7 @@ function App() {
       }, 1000);
     }
   }, [userInfo]);
-  useEffect(() => {
-    console.log(accessToken);
-    if (accessToken !== undefined && accessToken !== "") {
-      {
-        const tempUserInfo = {
-          accessToken: accessToken,
-          refreshToken: window.localStorage.getItem("refreshToken"),
-          code: window.localStorage.getItem("code"),
-        };
-        store.dispatch({ type: "loggedin", action: true });
-        store.dispatch({ type: "userInfo", payload: tempUserInfo });
-        setUserInfo(tempUserInfo);
-        setIsLogged(true);
-      }
-    }
-  }, []);
+  
   useEffect(() => {
     setIsPlaying(store.getState().isPlaying);
   }, [store.getState().isPlaying]);
@@ -155,13 +142,14 @@ function App() {
                 whileHover={{ scale: 1.2 }}
                 onHoverStart={(e) => {}}
                 onHoverEnd={(e) => {}}
-                className="flex absolute right-4 items-center justify-end text-xl mb-2 mt-2 gap-6"
+                className="flex absolute right-4 items-center justify-end text-xl mb-2 mt-2 gap-6 z-20"
                 onClick={() => {
+                  console.log("closing");
                   appWindow.close();
+                  TauriEvent.emit("close");
                 }}
               >
                 <FontAwesomeIcon icon={faCircleXmark} />
-                
               </motion.div>
             </div>}
             {!isLogged && (<div className="flex gap-6">
@@ -208,6 +196,7 @@ function App() {
                 className="flex items-center justify-end text-xl mb-2 mt-2 gap-6"
                 onClick={() => {
                   appWindow.close();
+                  TauriEvent.emit("close");
                 }}
               >
                 <FontAwesomeIcon icon={faCircleXmark} />
