@@ -31,7 +31,14 @@ async function getCurrentlyPlayingTrack() {
         Authorization: `Bearer ${accessToken}`, // Include access token in the Authorization header
       },
     });
-
+    if (response.status === 401) {
+      try {
+        refreshToken();
+      } catch (error) {
+        console.error("Error refreshing token:", error);
+      }
+      return;
+    }
     const info = await response.json();
 
     const songInfo = {
@@ -44,6 +51,29 @@ async function getCurrentlyPlayingTrack() {
     console.log("Currently playing track:", songInfo);
     store.dispatch({ type: "songInfo", payload: songInfo });
   }
+}
+
+async function refreshToken() {
+  const refreshToken = store.getState().refreshToken;
+  const response = await fetch(
+    "https://spotify-widget-server.vercel.app/refresh",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: {
+        refreshToken: refreshToken,
+      },
+    }
+  );
+  response
+    .then((res) => {
+      store.dispatch({ type: "accessToken", payload: res.json().access_token });
+    })
+    .catch((error) => {
+      console.error("Error refreshing token:", error);
+    });
 }
 
 async function spotifyMediaControl(control) {
@@ -60,19 +90,27 @@ async function spotifyMediaControl(control) {
         "Content-Type": "application/json",
       },
     })
-      .then((response) => {
+      .then(async(response) => {
         if (response.ok) {
           getCurrentlyPlayingTrack();
         } else {
+          if (response.status === 401) {
+            try {
+              await refreshToken();
+              spotifyMediaControl(control);
+            } catch (error) {
+              console.error("Error refreshing token:", error);
+            }
+          }
           console.error(
-            "Failed to skip to the next track:",
+            `Failed to ${control} the next track:`,
             response.status,
             response.statusText
           );
         }
       })
       .catch((error) => {
-        console.error("Error skipping to the next track:", error);
+        console.error(`Error ${control} the next track:`, error);
       });
   }
 }

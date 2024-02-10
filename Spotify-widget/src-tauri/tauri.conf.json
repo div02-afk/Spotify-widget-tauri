@@ -32,6 +32,7 @@
         "setResizable": true,
         "setSize": true,
         "setPosition": true
+        
       },
       "all": false
     },
@@ -80,15 +81,17 @@
         "skipTaskbar": true,
         "alwaysOnTop": true,
         "transparent": true,
+        "theme": "Dark",
         "hiddenTitle": true,
         "height": 90,
         "x": 1230,
         "y": 700,
         "minimizable": false,
         "closable": false,
-        "titleBarStyle": "Transparent",
+        
         "resizable": false,
         "width": 300
+        
         
         
       }

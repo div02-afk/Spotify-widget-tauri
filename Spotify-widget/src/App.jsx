@@ -175,14 +175,15 @@ function App() {
                     if (json !== "") {
                       console.log("frontend received data");
                       clearInterval(interval);
+                      console.log(json);
                       setUserInfo(json);
                       setIsLogged(true);
                     }
                     count++;
-                    if (count > 20) {
+                    if (count > 30) {
                       clearInterval(interval);
                     }
-                  }, 1000);
+                  }, 500);
                 }}
               >
                 <FontAwesomeIcon icon={faArrowRightToBracket} />

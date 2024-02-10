@@ -18,6 +18,9 @@ const initialState = {
 const keyReducer = (state = initialState, action) => {
   return produce(state, (draft) => {
     switch (action.type) {
+      case "accessToken":
+        draft.accessToken = action.payload;
+        break;
       case "userInfo":
         draft.accessToken = action.payload.accessToken;
         draft.refreshToken = action.payload.refreshToken;
