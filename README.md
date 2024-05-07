@@ -1,5 +1,5 @@
 <h1>A Simple Spotify widget</h1>
-<p>Made using Tauri (React frontend and a Rust backend)</p>
+<p>Made using Tauri (React)</p>
 <p>Use it to get better control over your music playback</p>
 
 <h1>Screenshots</h1>
